@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  database:
+    image: postgres:15.1
+    container_name: transaction_demo
+    ports:
+      - 25432:5432
+    volumes:
+      - db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: transaction_demo
+
+volumes:
+  db:
+    driver: local
