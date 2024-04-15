@@ -13,10 +13,12 @@ public class TransactionalUserService {
 
     private final UserRepository userRepository;
     private final AnotherTransactionalService anotherTransactionalService;
+    private final NonTransactionalUserService nonTransactionalUserService;
 
-    public TransactionalUserService(UserRepository userRepository, AnotherTransactionalService anotherTransactionalService) {
+    public TransactionalUserService(UserRepository userRepository, AnotherTransactionalService anotherTransactionalService, NonTransactionalUserService nonTransactionalUserService) {
         this.userRepository = userRepository;
         this.anotherTransactionalService = anotherTransactionalService;
+        this.nonTransactionalUserService = nonTransactionalUserService;
     }
 
     public User createUser(String name) {
@@ -80,6 +82,19 @@ public class TransactionalUserService {
         log.info("end save: {}", user1);
         try {
             var user2 = anotherTransactionalService.createUserAndError(name2);
+        } catch (RuntimeException e) {
+            log.error("catch error");
+        }
+        return List.of(user1, user1);
+    }
+    public List<User> createCoupleOfUsersAndErrorFromNonTransactionalService(String name1, String name2) {
+        log.info("start service");
+        var user1 = new User(name1);
+        log.info("start save: {}", user1);
+        userRepository.save(user1);
+        log.info("end save: {}", user1);
+        try {
+            var user2 = nonTransactionalUserService.createUserAndError(name2);
         } catch (RuntimeException e) {
             log.error("catch error");
         }

@@ -258,4 +258,28 @@ public class UserController {
         var users = transactionalUserService.createCoupleOfUsersAndErrorNextServiceAndCatch(userForm.getName() + "_1", userForm.getName() + "_2");
         return ResponseEntity.ok(users);
     }
+
+    @PostMapping("/create_couple_of_users_rollback4")
+    public ResponseEntity<List<User>> createCoupleOfUsersRollback4(@RequestBody UserForm userForm) {
+        // 2つとも正常に保存される
+        // transactionalなserviceから別のnon transactionalなserviceを呼び出す
+        // 2つめのserviceの中で例外をthrow
+        // その例外をcatchしている
+        // non transactionalなserviceで例外をthrowしてもtransactionalなserviceでcatchすればrollbackされずcommitされる
+        // [nio-8080-exec-4] o.s.t.i.TransactionInterceptor           : Getting transaction for [org.tky.demo.TransactionalUserService.createCoupleOfUsersAndErrorFromNonTransactionalService]
+        // [nio-8080-exec-4] org.tky.demo.TransactionalUserService    : start service
+        // [nio-8080-exec-4] org.tky.demo.TransactionalUserService    : start save: User(id=0, name=John Doe_1)
+        // [nio-8080-exec-4] o.s.t.i.TransactionInterceptor           : Getting transaction for [org.springframework.data.jpa.repository.support.SimpleJpaRepository.save]
+        // [nio-8080-exec-4] o.s.t.i.TransactionInterceptor           : Completing transaction for [org.springframework.data.jpa.repository.support.SimpleJpaRepository.save]
+        // [nio-8080-exec-4] org.tky.demo.TransactionalUserService    : end save: User(id=44, name=John Doe_1)
+        // [nio-8080-exec-4] o.tky.demo.NonTransactionalUserService   : start service
+        // [nio-8080-exec-4] o.tky.demo.NonTransactionalUserService   : start save: User(id=0, name=John Doe_2)
+        // [nio-8080-exec-4] o.s.t.i.TransactionInterceptor           : Getting transaction for [org.springframework.data.jpa.repository.support.SimpleJpaRepository.save]
+        // [nio-8080-exec-4] o.s.t.i.TransactionInterceptor           : Completing transaction for [org.springframework.data.jpa.repository.support.SimpleJpaRepository.save]
+        // [nio-8080-exec-4] o.tky.demo.NonTransactionalUserService   : end save: User(id=45, name=John Doe_2)
+        // [nio-8080-exec-4] org.tky.demo.TransactionalUserService    : catch error
+        // [nio-8080-exec-4] o.s.t.i.TransactionInterceptor           : Completing transaction for [org.tky.demo.TransactionalUserService.createCoupleOfUsersAndErrorFromNonTransactionalService]
+        var users = transactionalUserService.createCoupleOfUsersAndErrorFromNonTransactionalService(userForm.getName() + "_1", userForm.getName() + "_2");
+        return ResponseEntity.ok(users);
+    }
 }
